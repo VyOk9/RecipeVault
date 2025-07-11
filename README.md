@@ -190,6 +190,10 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/recipevault_db?schem
 Then:
 
 ```bash
+# Install Prisma CLI if not already
+npm install prisma --save-dev
+npm install @prisma/client
+
 # Generate Prisma Client
 npx prisma generate
 
