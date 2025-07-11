@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { RecipesService } from './recipes.service';
@@ -16,7 +17,7 @@ import { Recipe } from '@prisma/client';
  *
  * Handles HTTP requests related to recipes:
  * - Creating a recipe
- * - Retrieving all recipes or one by ID
+ * - Retrieving recipes for a specific user
  * - Updating a recipe
  * - Deleting a recipe
  */
@@ -47,24 +48,31 @@ export class RecipesController {
   }
 
   /**
-   * Retrieves all recipes.
+   * Retrieves all recipes for a given user.
    *
-   * @returns A list of all recipes
+   * @param userId - The user's ID (passed as query param)
+   * @returns A list of recipes belonging to the user
    */
   @Get()
-  findAll(): Promise<Recipe[]> {
-    return this.recipesService.findAll();
+  findAll(
+    @Query('userId', ParseIntPipe) userId: number,
+  ): Promise<Recipe[]> {
+    return this.recipesService.findAll(userId);
   }
 
   /**
-   * Retrieves a recipe by its ID.
+   * Retrieves a specific recipe by ID for a given user.
    *
    * @param id - The ID of the recipe
-   * @returns The recipe with its details
+   * @param userId - The user's ID (passed as query param)
+   * @returns The recipe with its details if it belongs to the user
    */
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Recipe> {
-    return this.recipesService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('userId', ParseIntPipe) userId: number,
+  ): Promise<Recipe> {
+    return this.recipesService.findOne(id, userId);
   }
 
   /**

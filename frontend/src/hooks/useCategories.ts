@@ -3,13 +3,21 @@
 import { useState, useEffect, useCallback } from "react"
 import { CategoriesService } from "@/services/categories.service"
 import type { Category } from "@/types"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function useCategories() {
+  const { user, isAuthenticated } = useAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
 
   const loadCategories = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) {
+      setLoading(false)
+      setCategories([])
+      return
+    }
+
     try {
       setLoading(true)
       setError("")
@@ -20,7 +28,7 @@ export function useCategories() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isAuthenticated, user?.id])
 
   const addCategory = async (name: string) => {
     try {

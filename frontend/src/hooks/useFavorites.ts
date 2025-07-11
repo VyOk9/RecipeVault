@@ -23,10 +23,11 @@ export function useFavorites() {
       setLoading(true)
       setError("")
       const rawFavorites = await FavoritesService.getUserFavorites(user.id)
+
       const hydratedFavorites: Favorite[] = await Promise.all(
         rawFavorites.map(async (fav) => {
           try {
-            const fullRecipe = fav.recipe?.id ? fav.recipe : await RecipesService.getById(fav.recipeId)
+            const fullRecipe = fav.recipe?.id ? fav.recipe : await RecipesService.getById(fav.recipeId, user.id)
             return { ...fav, recipe: fullRecipe }
           } catch (recipeErr) {
             console.error(`Failed to load recipe ${fav.recipeId} for favorite ${fav.id}:`, recipeErr)
@@ -57,7 +58,7 @@ export function useFavorites() {
     if (!user?.id) throw new Error("User not authenticated")
     try {
       const newFavorite = await FavoritesService.addFavorite(user.id, recipeId)
-      const fullRecipe = await RecipesService.getById(recipeId)
+      const fullRecipe = await RecipesService.getById(recipeId, user.id)
       setFavorites((prev) => [...prev, { ...newFavorite, recipe: fullRecipe }])
       return newFavorite
     } catch (err) {
@@ -66,6 +67,10 @@ export function useFavorites() {
   }
 
   const removeFavorite = async (favoriteId: number) => {
+    if (typeof favoriteId !== "number" || isNaN(favoriteId)) {
+      console.error("Attempted to remove favorite with invalid ID:", favoriteId)
+      throw new Error("Invalid favorite ID provided for removal.")
+    }
     try {
       await FavoritesService.removeFavorite(favoriteId)
       setFavorites((prev) => prev.filter((fav) => fav.id !== favoriteId))
@@ -81,13 +86,6 @@ export function useFavorites() {
     [favorites],
   )
 
-  const getFavoriteIdForRecipe = useCallback(
-    (recipeId: number) => {
-      return favorites.find((fav) => fav.recipeId === recipeId)?.id
-    },
-    [favorites],
-  )
-
   useEffect(() => {
     loadFavorites()
   }, [loadFavorites])
@@ -99,7 +97,6 @@ export function useFavorites() {
     addFavorite,
     removeFavorite,
     isRecipeFavorite,
-    getFavoriteIdForRecipe,
     refetch: loadFavorites,
   }
 }

@@ -7,7 +7,7 @@ import { Prisma, Recipe } from '@prisma/client';
  *
  * Provides operations related to recipes:
  * - Creating (with ingredient and category associations)
- * - Retrieving (all or by ID)
+ * - Retrieving (all or by ID) for a specific user
  * - Updating
  * - Deleting (along with associated favorites)
  */
@@ -53,12 +53,14 @@ export class RecipesService {
   }
 
   /**
-   * Retrieves all recipes with their ingredients, categories, and favorites.
+   * Retrieves all recipes for a specific user.
    *
-   * @returns A list of all recipes
+   * @param userId - The user's ID
+   * @returns A list of recipes belonging to the user
    */
-  async findAll(): Promise<Recipe[]> {
+  async findAll(userId: number): Promise<Recipe[]> {
     return this.prisma.recipe.findMany({
+      where: { userId },
       include: {
         ingredients: true,
         categories: true,
@@ -68,13 +70,14 @@ export class RecipesService {
   }
 
   /**
-   * Retrieves a single recipe by its ID.
+   * Retrieves a single recipe by its ID and verifies ownership.
    *
    * @param id - The recipe ID
-   * @returns The found recipe with ingredients, categories, and favorites
-   * @throws NotFoundException if the recipe does not exist
+   * @param userId - The user's ID
+   * @returns The found recipe if it belongs to the user
+   * @throws NotFoundException if the recipe doesn't exist or doesn't belong to the user
    */
-  async findOne(id: number): Promise<Recipe> {
+  async findOne(id: number, userId: number): Promise<Recipe> {
     const recipe = await this.prisma.recipe.findUnique({
       where: { id },
       include: {
@@ -83,7 +86,11 @@ export class RecipesService {
         favorites: true,
       },
     });
-    if (!recipe) throw new NotFoundException(`Recipe with id ${id} not found`);
+
+    if (!recipe || recipe.userId !== userId) {
+      throw new NotFoundException(`Recipe with id ${id} not found for this user`);
+    }
+
     return recipe;
   }
 

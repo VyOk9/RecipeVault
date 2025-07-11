@@ -3,13 +3,21 @@
 import { useState, useEffect, useCallback } from "react"
 import { IngredientsService } from "@/services/ingredients.service"
 import type { Ingredient } from "@/types"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function useIngredients() {
+  const { user, isAuthenticated } = useAuth()
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
 
   const loadIngredients = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) {
+      setLoading(false)
+      setIngredients([])
+      return
+    }
+
     try {
       setLoading(true)
       setError("")
@@ -20,7 +28,7 @@ export function useIngredients() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isAuthenticated, user?.id])
 
   const addIngredient = async (name: string) => {
     try {

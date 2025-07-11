@@ -21,7 +21,6 @@ export default function RecipesPage() {
     addFavorite,
     removeFavorite,
     isRecipeFavorite,
-    getFavoriteIdForRecipe,
     refetch: refetchFavorites,
   } = useFavorites()
   const { categories, loading: categoriesLoading } = useCategories()
@@ -34,11 +33,10 @@ export default function RecipesPage() {
 
   const handleAddOrRemoveFavorite = async (recipeId: number) => {
     try {
-      if (isRecipeFavorite(recipeId)) {
-        const favoriteId = getFavoriteIdForRecipe(recipeId)
-        if (favoriteId) {
-          await removeFavorite(favoriteId)
-        }
+      const existingFavorite = favorites.find((fav) => fav.recipeId === recipeId)
+
+      if (existingFavorite) {
+        await removeFavorite(existingFavorite.id)
       } else {
         await addFavorite(recipeId)
       }

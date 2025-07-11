@@ -14,11 +14,14 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import type { Recipe } from "@/types"
 import { ROUTES } from "@/constants"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function RecipeDetailPage() {
   const router = useRouter()
   const params = useParams()
   const recipeId = Number(params.id)
+
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
 
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,8 +31,15 @@ export default function RecipeDetailPage() {
   const [messageType, setMessageType] = useState<"success" | "error">("success")
 
   useEffect(() => {
-    if (Number.isNaN(recipeId)) {
-      setError("ID de recette invalide.")
+    if (authLoading) return
+
+    if (!isAuthenticated || !user?.id) {
+      router.replace(ROUTES.LOGIN)
+      return
+    }
+
+    if (Number.isNaN(recipeId) || !recipeId) {
+      setError("ID de recette invalide ou manquant.")
       setLoading(false)
       return
     }
@@ -38,7 +48,7 @@ export default function RecipeDetailPage() {
       try {
         setLoading(true)
         setError(null)
-        const data = await RecipesService.getById(recipeId)
+        const data = await RecipesService.getById(recipeId, user.id)
         setRecipe(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur lors du chargement de la recette.")
@@ -48,7 +58,7 @@ export default function RecipeDetailPage() {
     }
 
     fetchRecipe()
-  }, [recipeId])
+  }, [recipeId, user?.id, isAuthenticated, authLoading, router])
 
   const handleUpdateRecipe = async (data: {
     title?: string
@@ -72,7 +82,7 @@ export default function RecipeDetailPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <DashboardLayout currentPage="recipes">
         <div className="flex items-center justify-center min-h-[400px]">

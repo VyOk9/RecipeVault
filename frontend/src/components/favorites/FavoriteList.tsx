@@ -88,3 +88,5 @@ function FavoriteItem({ recipe, onRemoveFromFavorites, onViewDetails }: Favorite
     </Card>
   )
 }
+
+

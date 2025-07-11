@@ -3,29 +3,37 @@
 import { useState, useEffect, useCallback } from "react"
 import { RecipesService } from "@/services/recipes.service"
 import type { Recipe } from "@/types"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function useRecipes() {
+  const { user, isAuthenticated } = useAuth()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
 
   const loadRecipes = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) {
+      setLoading(false)
+      setRecipes([])
+      return
+    }
+
     try {
       setLoading(true)
       setError("")
-      const data = await RecipesService.getAll()
+      const data = await RecipesService.getAll(user.id)
       setRecipes(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors du chargement des recettes")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isAuthenticated, user?.id])
 
   const addRecipe = async (recipeData: {
     title: string
-    steps: string
-    cookTime: string
+    steps: string[]
+    cookTime: number
     photoUrl?: string
     userId: number
     ingredientIds: number[]
@@ -44,8 +52,8 @@ export function useRecipes() {
     id: number,
     recipeData: {
       title?: string
-      steps?: string
-      cookTime?: string
+      steps?: string[]
+      cookTime?: number
       photoUrl?: string
       ingredientIds?: number[]
       categoryIds?: number[]

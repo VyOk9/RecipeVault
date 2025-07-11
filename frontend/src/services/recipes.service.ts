@@ -3,12 +3,12 @@ import { API_ENDPOINTS } from "@/constants"
 import type { Recipe } from "@/types"
 
 export class RecipesService {
-  static async getAll(): Promise<Recipe[]> {
-    return apiClient.get<Recipe[]>(API_ENDPOINTS.RECIPES)
+  static async getAll(userId: number): Promise<Recipe[]> {
+    return apiClient.get<Recipe[]>(`${API_ENDPOINTS.RECIPES}?userId=${userId}`)
   }
 
-  static async getById(id: number): Promise<Recipe> {
-    return apiClient.get<Recipe>(`${API_ENDPOINTS.RECIPES}/${id}`)
+  static async getById(id: number, userId: number): Promise<Recipe> {
+    return apiClient.get<Recipe>(`${API_ENDPOINTS.RECIPES}/${id}?userId=${userId}`)
   }
 
   static async create(recipeData: {

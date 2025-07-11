@@ -10,7 +10,7 @@ import { useState, useEffect } from "react"
 import type { Recipe } from "@/types"
 
 export default function FavoritesPage() {
-  const { favorites, loading, removeFavorite, error, getFavoriteIdForRecipe } = useFavorites()
+  const { favorites, loading, removeFavorite, error } = useFavorites()
   const router = useRouter()
   const [message, setMessage] = useState("")
   const [messageType, setMessageType] = useState<"success" | "error">("success")
@@ -28,9 +28,10 @@ export default function FavoritesPage() {
     if (!confirm("Êtes-vous sûr de vouloir retirer cette recette de vos favoris ?")) return
 
     try {
-      const favoriteId = getFavoriteIdForRecipe(recipeId)
-      if (favoriteId) {
-        await removeFavorite(favoriteId)
+      const favoriteEntry = favorites.find((fav) => fav.recipeId === recipeId)
+
+      if (favoriteEntry) {
+        await removeFavorite(favoriteEntry.id)
         setMessage("Recette retirée des favoris avec succès !")
         setMessageType("success")
       } else {
